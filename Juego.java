@@ -1,8 +1,11 @@
 import java.util.Scanner;
 
 public class Juego {
+    private Jugador jugador;
+    private Enemigo[] enemigos;
+    private boolean juegoTerminado;
+    private int turno;
     public static void main(String[] args) {
-        Scanner lector = new Scanner(System.in);
-        lector.close();
+        System.out.println("Hola mundo");
     }
 }

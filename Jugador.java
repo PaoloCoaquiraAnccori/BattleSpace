@@ -4,15 +4,16 @@ public class Jugador {
     private int ataque;
     private int puntaje;
 
-    public Jugador (String nombre,int salud, int ataque){
+    public Jugador(String nombre, int salud, int ataque) {
         this.nombre = nombre;
         this.salud = salud;
         this.ataque = ataque;
         this.puntaje = 0;
     }
+
     public void atacar(Enemigo enemigo) {
         enemigo.recibirDanio(ataque);
-        puntaje += 10; // por ejemplo
+        puntaje += 10;
     }
 
     public void recibirDanio(int cantidad) {

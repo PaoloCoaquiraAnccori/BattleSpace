@@ -1,68 +1,124 @@
 import java.util.*;
 
 public class Juego {
+    private static final int TAMANO = 10;
     private Jugador jugador;
-    private boolean juegoTerminado;
-    private int turno;
-    private Combate combate;
-    private Scanner scanner = new Scanner(System.in);
+    private List<Enemigo> enemigos;
+    private List<int[]> disparosJugador;
+    private List<int[]> disparosEnemigos;
+    private Random random;
+    private Scanner scanner;
 
-    public void iniciarJuego() {
-        System.out.print("Ingrese el nombre de su nave: ");
+    public Juego() {
+        scanner = new Scanner(System.in);
+        random = new Random();
+        enemigos = new ArrayList<>();
+        disparosJugador = new ArrayList<>();
+        disparosEnemigos = new ArrayList<>();
+    }
+
+    public void iniciar() {
+        System.out.print("Ingresa tu nombre: ");
         String nombre = scanner.nextLine();
-        jugador = new Jugador(nombre, 100, 20);
-        Enemigo[] enemigos = generarEnemigos(3);
-        combate = new Combate(jugador, enemigos);
-        juegoTerminado = false;
-        turno = 1;
-        System.out.println("\n--- ¡Bienvenido a Battle Space! ---\n");
+        jugador = new Jugador(nombre, TAMANO - 1, TAMANO / 2);
+
+        for (int i = 0; i < 3; i++) {
+            enemigos.add(new Enemigo(random.nextInt(3), random.nextInt(TAMANO)));
+        }
+
+        while (jugador.estaVivo()) {
+            mostrarTablero();
+            System.out.println("Salud: " + jugador.getSalud() + " | Puntaje: " + jugador.getPuntaje());
+            System.out.print("Mover (w/a/s/d), disparar (f), salir (x): ");
+            char accion = scanner.nextLine().toLowerCase().charAt(0);
+
+            if (accion == 'x') break;
+            if (accion == 'f') {
+                disparosJugador.add(new int[]{jugador.getFila() - 1, jugador.getColumna()});
+            } else {
+                jugador.mover(accion, TAMANO);
+            }
+
+            moverEnemigos();
+            moverDisparos();
+            verificarColisiones();
+        }
+
+        System.out.println("Juego terminado. Puntaje final: " + jugador.getPuntaje());
     }
 
-    public void ejecutarTurno() {
-        System.out.println("\n--- Turno " + turno + " ---");
-        mostrarEstado();
-        combate.jugarJugador();
-        combate.eliminarEnemigosDerrotados();
-        combate.jugarEnemigos();
-        turno++;
-    }
+    private void mostrarTablero() {
+        char[][] tablero = new char[TAMANO][TAMANO];
+        for (char[] fila : tablero) Arrays.fill(fila, '.');
 
-    public void verificarFinDelJuego() {
-        if (!jugador.estaVivo()) {
-            juegoTerminado = true;
-            System.out.println("\n¡Has sido destruido! Game Over.");
-        } else if (combate.getEnemigos().length == 0) {
-            juegoTerminado = true;
-            System.out.println("\n¡Has derrotado a todos los enemigos! ¡Victoria!");
+        tablero[jugador.getFila()][jugador.getColumna()] = 'J';
+
+        for (Enemigo e : enemigos) {
+            if (e.estaVivo()) tablero[e.getFila()][e.getColumna()] = 'E';
+        }
+
+        for (int[] d : disparosJugador) {
+            if (estaEnRango(d[0], d[1])) tablero[d[0]][d[1]] = '|';
+        }
+
+        for (int[] d : disparosEnemigos) {
+            if (estaEnRango(d[0], d[1])) tablero[d[0]][d[1]] = '*';
+        }
+
+        for (char[] fila : tablero) {
+            for (char c : fila) System.out.print(c + " ");
+            System.out.println();
         }
     }
 
-    public void mostrarEstado() {
-        System.out.println("Jugador: " + jugador.getNombre() + " | Salud: " + jugador.getSalud() + " | Ataque: " + jugador.getAtaque() + " | Puntaje: " + jugador.getPuntaje());
-        for (Enemigo e : combate.getEnemigos()) {
-            e.mostrarEstado();
+    private void moverEnemigos() {
+        for (Enemigo e : enemigos) {
+            if (e.estaVivo()) {
+                e.mover(TAMANO);
+                if (random.nextInt(100) < 20) {
+                    disparosEnemigos.add(new int[]{e.getFila() + 1, e.getColumna()});
+                }
+            }
         }
     }
 
-    public Enemigo[] generarEnemigos(int cantidad) {
-        Enemigo[] lista = new Enemigo[cantidad];
-        String[] tipos = {"Alien", "Drone", "Cazador"};
-        Random r = new Random();
-        for (int i = 0; i < cantidad; i++) {
-            String tipo = tipos[r.nextInt(tipos.length)];
-            int salud = 30 + r.nextInt(30); // 30 a 59
-            int ataque = 5 + r.nextInt(10); // 5 a 14
-            lista[i] = new Enemigo(tipo, salud, ataque);
+    private void moverDisparos() {
+        disparosJugador.removeIf(d -> --d[0] < 0);
+        disparosEnemigos.removeIf(d -> ++d[0] >= TAMANO);
+    }
+
+    private void verificarColisiones() {
+        Iterator<int[]> disparosIt = disparosJugador.iterator();
+        while (disparosIt.hasNext()) {
+            int[] d = disparosIt.next();
+            for (Enemigo e : enemigos) {
+                if (e.estaVivo() && e.getFila() == d[0] && e.getColumna() == d[1]) {
+                    e.recibirDanio(1);
+                    jugador.aumentarPuntaje(10);
+                    disparosIt.remove();
+                    if (!e.estaVivo()) {
+                        enemigos.remove(e);
+                        enemigos.add(new Enemigo(random.nextInt(3), random.nextInt(TAMANO)));
+                    }
+                    break;
+                }
+            }
         }
-        return lista;
+
+        disparosEnemigos.removeIf(d -> {
+            if (jugador.getFila() == d[0] && jugador.getColumna() == d[1]) {
+                jugador.recibirDanio(1);
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private boolean estaEnRango(int fila, int col) {
+        return fila >= 0 && fila < TAMANO && col >= 0 && col < TAMANO;
     }
 
     public static void main(String[] args) {
-        Juego juego = new Juego();
-        juego.iniciarJuego();
-        while (!juego.juegoTerminado) {
-            juego.ejecutarTurno();
-            juego.verificarFinDelJuego();
-        }
+        new Juego().iniciar();
     }
 }

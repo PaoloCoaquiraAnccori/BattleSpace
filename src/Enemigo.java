@@ -1,40 +1,28 @@
+import java.util.Random;
+
 public class Enemigo {
-    private String tipo;
-    private int salud;
-    private int ataque;
+    private int fila, columna;
+    private int salud = 1;
+    private Random rand = new Random();
 
-    public Enemigo(String tipo, int salud, int ataque) {
-        this.tipo = tipo;
-        this.salud = salud;
-        this.ataque = ataque;
+    public Enemigo(int fila, int columna) {
+        this.fila = fila;
+        this.columna = columna;
     }
 
-    public void atacar(Jugador j) {
-        j.recibirDanio(ataque);
+    public void mover(int limite) {
+        int movimiento = rand.nextInt(3) - 1;
+        columna = Math.max(0, Math.min(limite - 1, columna + movimiento));
     }
 
-    public void recibirDanio(int cantidad) {
-        salud -= cantidad;
-        if (salud < 0) salud = 0;
+    public void recibirDanio(int d) {
+        salud -= d;
     }
 
     public boolean estaVivo() {
         return salud > 0;
     }
 
-    public void mostrarEstado() {
-        System.out.println("Tipo: " + tipo + " | Salud: " + salud);
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public int getSalud() {
-        return salud;
-    }
-
-    public int getAtaque() {
-        return ataque;
-    }
+    public int getFila() { return fila; }
+    public int getColumna() { return columna; }
 }

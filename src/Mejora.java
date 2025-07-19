@@ -1,5 +1,6 @@
+// Esta clase podría usarse para mejoras o power-ups futuros
 public class Mejora {
-    private String tipo; // "vida" o "ataque"
+    private String tipo;
     private int valor;
 
     public Mejora(String tipo, int valor) {
@@ -7,15 +8,6 @@ public class Mejora {
         this.valor = valor;
     }
 
-    public String getTipo() {
-        return tipo;
-    }
-
-    public int getValor() {
-        return valor;
-    }
-
-    public String descripcion() {
-        return "Mejora de " + tipo + " (+" + valor + ")";
-    }
+    public String getTipo() { return tipo; }
+    public int getValor() { return valor; }
 }

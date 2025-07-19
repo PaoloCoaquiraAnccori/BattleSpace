@@ -1,51 +1,38 @@
 public class Jugador {
     private String nombre;
-    private int salud;
-    private int ataque;
-    private int puntaje;
+    private int fila, columna;
+    private int salud = 5;
+    private int puntaje = 0;
 
-    public Jugador(String nombre, int salud, int ataque) {
+    public Jugador(String nombre, int fila, int columna) {
         this.nombre = nombre;
-        this.salud = salud;
-        this.ataque = ataque;
-        this.puntaje = 0;
+        this.fila = fila;
+        this.columna = columna;
     }
 
-    public void atacar(Enemigo enemigo) {
-        enemigo.recibirDanio(ataque);
-        puntaje += 10;
+    public void mover(char direccion, int limite) {
+        switch (direccion) {
+            case 'w' -> fila = Math.max(0, fila - 1);
+            case 's' -> fila = Math.min(limite - 1, fila + 1);
+            case 'a' -> columna = Math.max(0, columna - 1);
+            case 'd' -> columna = Math.min(limite - 1, columna + 1);
+        }
     }
 
-    public void recibirDanio(int cantidad) {
-        salud -= cantidad;
-        if (salud < 0) salud = 0;
+    public void recibirDanio(int d) {
+        salud -= d;
+    }
+
+    public void aumentarPuntaje(int p) {
+        puntaje += p;
     }
 
     public boolean estaVivo() {
         return salud > 0;
     }
 
-    public void usarMejora(Mejora m) {
-        if (m.getTipo().equals("vida")) {
-            salud += m.getValor();
-        } else if (m.getTipo().equals("ataque")) {
-            ataque += m.getValor();
-        }
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
-
-    public int getSalud() {
-        return salud;
-    }
-
-    public int getAtaque() {
-        return ataque;
-    }
-
-    public int getPuntaje() {
-        return puntaje;
-    }
+    public int getFila() { return fila; }
+    public int getColumna() { return columna; }
+    public int getSalud() { return salud; }
+    public int getPuntaje() { return puntaje; }
 }

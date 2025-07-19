@@ -1,4 +1,4 @@
-// Esta clase podría usarse para mejoras o power-ups futuros
+
 public class Mejora {
     private String tipo;
     private int valor;

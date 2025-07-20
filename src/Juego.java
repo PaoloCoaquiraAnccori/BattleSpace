@@ -6,6 +6,7 @@ public class Juego {
     private List<Enemigo> enemigos;
     private List<int[]> disparosJugador;
     private List<int[]> disparosEnemigos;
+    private List<Mejora> mejoras;
     private Random random;
     private Scanner scanner;
 
@@ -15,6 +16,7 @@ public class Juego {
         enemigos = new ArrayList<>();
         disparosJugador = new ArrayList<>();
         disparosEnemigos = new ArrayList<>();
+        mejoras = new ArrayList<>();
     }
 
     public void iniciar() {
@@ -35,12 +37,20 @@ public class Juego {
             if (accion == 'x') break;
             if (accion == 'f') {
                 disparosJugador.add(new int[]{jugador.getFila() - 1, jugador.getColumna()});
+                if (jugador.tieneAtaqueDoble()) {
+                    if (jugador.getColumna() > 0)
+                        disparosJugador.add(new int[]{jugador.getFila() - 1, jugador.getColumna() - 1});
+                    if (jugador.getColumna() < TAMANO - 1)
+                        disparosJugador.add(new int[]{jugador.getFila() - 1, jugador.getColumna() + 1});
+                }
             } else {
                 jugador.mover(accion, TAMANO);
             }
 
+            jugador.reducirTurnoAtaque();
             moverEnemigos();
             moverDisparos();
+            moverMejoras();
             verificarColisiones();
         }
 
@@ -65,6 +75,10 @@ public class Juego {
             if (estaEnRango(d[0], d[1])) tablero[d[0]][d[1]] = '*';
         }
 
+        for (Mejora m : mejoras) {
+            if (estaEnRango(m.getFila(), m.getColumna())) tablero[m.getFila()][m.getColumna()] = 'M';
+        }
+
         for (char[] fila : tablero) {
             for (char c : fila) System.out.print(c + " ");
             System.out.println();
@@ -87,7 +101,17 @@ public class Juego {
         disparosEnemigos.removeIf(d -> ++d[0] >= TAMANO);
     }
 
+    private void moverMejoras() {
+        Iterator<Mejora> it = mejoras.iterator();
+        while (it.hasNext()) {
+            Mejora m = it.next();
+            m.caer();
+            if (m.getFila() >= TAMANO) it.remove();
+        }
+    }
+
     private void verificarColisiones() {
+        // Disparos jugador vs enemigos
         Iterator<int[]> disparosIt = disparosJugador.iterator();
         while (disparosIt.hasNext()) {
             int[] d = disparosIt.next();
@@ -96,7 +120,12 @@ public class Juego {
                     e.recibirDanio(1);
                     jugador.aumentarPuntaje(10);
                     disparosIt.remove();
+
                     if (!e.estaVivo()) {
+                        if (random.nextInt(100) < 50) {
+                            String tipo = random.nextBoolean() ? "salud" : "ataque";
+                            mejoras.add(new Mejora(e.getFila(), e.getColumna(), tipo));
+                        }
                         enemigos.remove(e);
                         enemigos.add(new Enemigo(random.nextInt(3), random.nextInt(TAMANO)));
                     }
@@ -105,6 +134,7 @@ public class Juego {
             }
         }
 
+        // Disparos enemigos vs jugador
         disparosEnemigos.removeIf(d -> {
             if (jugador.getFila() == d[0] && jugador.getColumna() == d[1]) {
                 jugador.recibirDanio(1);
@@ -112,6 +142,20 @@ public class Juego {
             }
             return false;
         });
+
+        // Jugador recoge mejora
+        Iterator<Mejora> it = mejoras.iterator();
+        while (it.hasNext()) {
+            Mejora m = it.next();
+            if (jugador.getFila() == m.getFila() && jugador.getColumna() == m.getColumna()) {
+                if (m.getTipo().equals("salud")) {
+                    jugador.curar(1);
+                } else if (m.getTipo().equals("ataque")) {
+                    jugador.activarAtaqueDoble();
+                }
+                it.remove();
+            }
+        }
     }
 
     private boolean estaEnRango(int fila, int col) {

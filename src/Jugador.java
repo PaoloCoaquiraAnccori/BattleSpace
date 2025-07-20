@@ -3,6 +3,7 @@ public class Jugador {
     private int fila, columna;
     private int salud = 5;
     private int puntaje = 0;
+    private int ataqueDobleTurnos = 0;
 
     public Jugador(String nombre, int fila, int columna) {
         this.nombre = nombre;
@@ -23,8 +24,24 @@ public class Jugador {
         salud -= d;
     }
 
+    public void curar(int c) {
+        salud += c;
+    }
+
     public void aumentarPuntaje(int p) {
         puntaje += p;
+    }
+
+    public void activarAtaqueDoble() {
+        ataqueDobleTurnos = 3;
+    }
+
+    public boolean tieneAtaqueDoble() {
+        return ataqueDobleTurnos > 0;
+    }
+
+    public void reducirTurnoAtaque() {
+        if (ataqueDobleTurnos > 0) ataqueDobleTurnos--;
     }
 
     public boolean estaVivo() {

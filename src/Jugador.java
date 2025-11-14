@@ -3,7 +3,7 @@ public class Jugador {
     private int fila, columna;
     private int salud = 5;
     private int puntaje = 0;
-    private int ataqueDobleTurnos = 0;
+    private int ataqueDobleTurnos = 0;//prueba
 
     public Jugador(String nombre, int fila, int columna) {
         this.nombre = nombre;
